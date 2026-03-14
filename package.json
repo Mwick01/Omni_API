@@ -1,0 +1,14 @@
+{
+  "name": "notice-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp Notice Bot",
+  "main": "whatsapp_sender.js",
+  "scripts": {
+    "send": "node whatsapp_sender.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode-terminal": "^0.12.0",
+    "better-sqlite3": "^9.4.3"
+  }
+}
