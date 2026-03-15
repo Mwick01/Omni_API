@@ -1,0 +1,17 @@
+# .github/workflows/scraper.yml
+name: Notice Scraper
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: { python-version: '3.11' }
+      - run: pip install -r requirements.txt
+      - run: python main.py
+        env:
+          TWILIO_SID: ${{ secrets.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
