@@ -3,7 +3,7 @@
 
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
-const sqlite3 = require("better-sqlite3");
+const initSqlJs = require("sql.js");
 const path = require("path");
 const fs = require("fs");
 
@@ -17,16 +17,39 @@ const DB_PATH = path.join(__dirname, "database.db");
 const DOWNLOAD_DIR = path.join(__dirname, "downloads");
 // ───────────────────────────────────────────────────────────────────────────
 
-const db = new sqlite3(DB_PATH);
+let db;
+async function loadDb() {
+  const SQL = await initSqlJs();
+  const fileBuffer = fs.readFileSync(DB_PATH);
+  db = new SQL.Database(fileBuffer);
+}
+
+function queryAll(sql, params = []) {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) rows.push(stmt.getAsObject());
+  stmt.free();
+  return rows;
+}
+
+function queryOne(sql, params = []) {
+  return queryAll(sql, params)[0] || null;
+}
+
+function run(sql, params = []) {
+  db.run(sql, params);
+}
 
 function getUnsentNotices() {
-  return db
-    .prepare("SELECT * FROM notices WHERE sent_to_whatsapp = 0")
-    .all();
+  return queryAll("SELECT * FROM notices WHERE sent_to_whatsapp = 0");
 }
 
 function markAsSent(id) {
-  db.prepare("UPDATE notices SET sent_to_whatsapp = 1 WHERE id = ?").run(id);
+  run("UPDATE notices SET sent_to_whatsapp = 1 WHERE id = ?", [id]);
+  // Save changes back to file
+  const data = db.export();
+  fs.writeFileSync(DB_PATH, Buffer.from(data));
 }
 
 function getFileExtension(filePath) {
