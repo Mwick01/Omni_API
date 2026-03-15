@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LOGIN_URL = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
-NOTICE_URL = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
+LOGIN_URL = "https://paravi.ruh.ac.lk/fosmis/login.php"
+NOTICE_URL = "https://paravi.ruh.ac.lk/fosmis/forms/form_53_a.php"
 DOWNLOAD_DIR = "downloads"
 
 USERNAME = os.getenv("SITE_USERNAME")
