@@ -10,7 +10,18 @@ jobs:
     timeout-minutes: 12
 
     steps:
-      - uses: actions/checkout@v4    # ← this already pulls .wwebjs_auth/ from repo
+      - uses: actions/checkout@v4
+
+      - name: Debug - Check session        # ← moved here, right after checkout
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== All files in root ==="
+          ls -la
+          echo "=== .wwebjs_auth contents ==="
+          ls -la .wwebjs_auth/ || echo "❌ .wwebjs_auth not found"
+          echo "=== .wwebjs_auth/session contents ==="
+          ls -la .wwebjs_auth/session/ || echo "❌ session subfolder not found"
 
       - name: Restore SQLite database
         uses: actions/cache@v4
@@ -55,14 +66,3 @@ jobs:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           WHATSAPP_CHANNEL_ID: ${{ secrets.WHATSAPP_CHANNEL_ID }}
         run: python main.py
-
-      - name: Debug - Check session
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          echo "=== All files in root ==="
-          ls -la
-          echo "=== .wwebjs_auth contents ==="
-          ls -la .wwebjs_auth/ || echo "❌ .wwebjs_auth not found"
-          echo "=== .wwebjs_auth/session contents ==="
-          ls -la .wwebjs_auth/session/ || echo "❌ session subfolder not found"
