@@ -3,40 +3,46 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from database import init_db, insert_notice, get_unsent_notices
+from pathlib import Path
 from dotenv import load_dotenv
+from database import init_db, insert_notice
 
 load_dotenv()
 
-LOGIN_URL = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
-NOTICE_URL = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
+LOGIN_URL   = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
+NOTICE_URL  = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
 DOWNLOAD_DIR = "downloads"
 
 USERNAME = os.getenv("SITE_USERNAME")
 PASSWORD = os.getenv("SITE_PASSWORD")
 
-VALID_EXTS = [".pdf", ".docx", ".doc", ".jpg", ".jpeg", ".png", ".txt", ".html"]
-
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
 def safe_filename(url):
-    name = os.path.basename(url)
+    name = os.path.basename(url.split("?")[0])
     name = re.sub(r"[\\/:*?\"<>|&=]", "_", name)
-    return name
+    return name or "unknown_file"
+
+
+def get_file_type(filename):
+    return Path(filename).suffix.lower().lstrip(".") or "unknown"
 
 
 def login():
     session = requests.Session()
     payload = {"uname": USERNAME, "upwd": PASSWORD}
     headers = {"User-Agent": "Mozilla/5.0"}
-    response = session.post(LOGIN_URL, data=payload, headers=headers)
-
-    if "Sign In" not in response.text:
-        print("✅ Login successful!")
-        return session
-    else:
-        print("❌ Login failed.")
+    try:
+        response = session.post(LOGIN_URL, data=payload, headers=headers, timeout=15)
+        if "Sign In" not in response.text:
+            print("✅ Login successful!")
+            return session
+        else:
+            print("❌ Login failed. Check credentials.")
+            return None
+    except Exception as e:
+        print(f"❌ Login error: {e}")
         return None
 
 
@@ -46,59 +52,81 @@ def scrape_and_download():
     if not session:
         return
 
-    print("🔍 Checking for new notices...")
-    response = session.get(NOTICE_URL)
+    print(f"🔍 Checking notices...")
+    response = session.get(NOTICE_URL, timeout=15)
     soup = BeautifulSoup(response.text, "html.parser")
+
+    # Only scrape the first table = "Most Recent Notices"
+    tables = soup.find_all("table")
+    if not tables:
+        print("❌ No tables found on page")
+        return
+
+    rows = tables[0].find_all("tr")[1:]  # skip header row
+    print(f"📋 Found {len(rows)} recent notices to check")
 
     new_count = 0
 
-    for link in soup.find_all("a", href=True):
-        href = link["href"]
-
-        if not any(href.lower().endswith(ext) or "form_53_a.php" in href for ext in VALID_EXTS):
+    for row in rows:
+        tds = row.find_all("td")
+        if len(tds) < 4:
             continue
 
-        full_url = urljoin(NOTICE_URL, href)
-        filename = safe_filename(href)
-        filepath = os.path.join(DOWNLOAD_DIR, filename)
-        title = link.get_text(strip=True) or filename
+        # Table columns: No | Add Date/Time | Title | Download Link
+        date_text = tds[1].get_text(strip=True)
+        title     = tds[2].get_text(strip=True)
+        dl_link   = tds[3].find("a", href=True)
+
+        if not dl_link:
+            continue
+
+        href      = dl_link.get("href", "")
+        full_url  = urljoin(NOTICE_URL, href)
+        filename  = safe_filename(href)
+        file_type = get_file_type(filename)
+        filepath  = os.path.join(DOWNLOAD_DIR, filename)
 
         try:
-            print(f"⬇ Downloading: {filename}")
-            file_resp = session.get(full_url)
+            file_resp = session.get(full_url, timeout=20)
 
-            # Handle HTML -> TXT conversion
-            final_filepath = filepath
-            final_filename = filename
-
-            if filename.lower().endswith(".html"):
+            # HTML → TXT conversion
+            if "text/html" in file_resp.headers.get("Content-Type", ""):
                 page_soup = BeautifulSoup(file_resp.content, "html.parser")
-                notice_div = page_soup.find("div", id="m")
-                raw = notice_div if notice_div else page_soup
-                for tag in raw(["script", "style"]):
+                notice_div = page_soup.find("div", id="m") or page_soup
+                for tag in notice_div(["script", "style"]):
                     tag.decompose()
                 text = "\n".join(
-                    [line.strip() for line in raw.get_text(separator="\n").split("\n")]
+                    line.strip() for line in notice_div.get_text(separator="\n").split("\n")
                 )
-                final_filename = filename.rsplit(".", 1)[0] + ".txt"
-                final_filepath = os.path.join(DOWNLOAD_DIR, final_filename)
-                with open(final_filepath, "w", encoding="utf-8") as tf:
-                    tf.write(text)
-                print(f"📝 Converted to text: {final_filename}")
+                filename  = Path(filename).stem + ".txt"
+                filepath  = os.path.join(DOWNLOAD_DIR, filename)
+                file_type = "txt"
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(text)
             else:
-                with open(final_filepath, "wb") as f:
+                with open(filepath, "wb") as f:
                     f.write(file_resp.content)
 
-            # Save to DB — returns True if it's a new notice
-            is_new = insert_notice(title, full_url, final_filepath)
-            if is_new:
-                print(f"✅ New notice saved to DB: {title}")
-                new_count += 1
+            # Insert — returns None if URL already exists (duplicate)
+            notice_id = insert_notice(
+                title=title,
+                url=full_url,
+                file_path=filepath,
+                file_type=file_type,
+                date_on_site=date_text,
+            )
+
+            if notice_id is None:
+                print(f"  ⏭ Already exists: {title}")
+                continue
+
+            print(f"  ✅ New notice saved: {title}")
+            new_count += 1
 
         except Exception as e:
-            print(f"❌ Error with {filename}: {e}")
+            print(f"  ❌ Error with {filename}: {e}")
 
-    print(f"✅ Done. {new_count} new notice(s) found.")
+    print(f"\n✅ Done. {new_count} new notice(s) found.")
 
 
 if __name__ == "__main__":
