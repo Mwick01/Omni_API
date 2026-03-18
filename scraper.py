@@ -4,13 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from pathlib import Path
+from datetime import datetime
 from dotenv import load_dotenv
 from database import init_db, insert_notice
 
 load_dotenv()
 
-LOGIN_URL   = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
-NOTICE_URL  = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
+LOGIN_URL    = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
+NOTICE_URL   = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
 DOWNLOAD_DIR = "downloads"
 
 USERNAME = os.getenv("SITE_USERNAME")
@@ -27,6 +28,16 @@ def safe_filename(url):
 
 def get_file_type(filename):
     return Path(filename).suffix.lower().lstrip(".") or "unknown"
+
+
+def is_within_one_month(date_text):
+    """Check if date string like '2026-03-06/09:30' is within last 30 days."""
+    try:
+        date_str = date_text.replace("/", " ").split(" ")[0].strip()
+        notice_date = datetime.strptime(date_str, "%Y-%m-%d")
+        return (datetime.now() - notice_date).days <= 30
+    except Exception:
+        return True  # If unparseable, include it to be safe
 
 
 def login():
@@ -52,25 +63,32 @@ def scrape_and_download():
     if not session:
         return
 
-    print(f"🔍 Checking notices...")
+    print("🔍 Checking notices...")
     response = session.get(NOTICE_URL, timeout=15)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Only scrape the first table = "Most Recent Notices"
     tables = soup.find_all("table")
     if not tables:
         print("❌ No tables found on page")
         return
 
-    rows = tables[0].find_all("tr")[1:]  # skip header row
-    print(f"📋 Found {len(rows)} recent notices to check")
+    # Collect all rows from all tables, filter to last 30 days only
+    recent_rows = []
+    for table in tables:
+        for row in table.find_all("tr")[1:]:  # skip header row
+            tds = row.find_all("td")
+            if len(tds) < 4:
+                continue
+            date_text = tds[1].get_text(strip=True)
+            if is_within_one_month(date_text):
+                recent_rows.append(row)
+
+    print(f"📋 Found {len(recent_rows)} notices from the last 30 days")
 
     new_count = 0
 
-    for row in rows:
+    for row in recent_rows:
         tds = row.find_all("td")
-        if len(tds) < 4:
-            continue
 
         # Table columns: No | Add Date/Time | Title | Download Link
         date_text = tds[1].get_text(strip=True)
@@ -120,7 +138,7 @@ def scrape_and_download():
                 print(f"  ⏭ Already exists: {title}")
                 continue
 
-            print(f"  ✅ New notice saved: {title}")
+            print(f"  ✅ New: {title}")
             new_count += 1
 
         except Exception as e:
