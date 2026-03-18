@@ -55,3 +55,14 @@ jobs:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           WHATSAPP_CHANNEL_ID: ${{ secrets.WHATSAPP_CHANNEL_ID }}
         run: python main.py
+
+      - name: Debug - Check session
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== All files in root ==="
+          ls -la
+          echo "=== .wwebjs_auth contents ==="
+          ls -la .wwebjs_auth/ || echo "❌ .wwebjs_auth not found"
+          echo "=== .wwebjs_auth/session contents ==="
+          ls -la .wwebjs_auth/session/ || echo "❌ session subfolder not found"
