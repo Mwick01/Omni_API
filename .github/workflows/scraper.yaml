@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: green-api
+          ref: master
 
       - name: Restore SQLite database
         uses: actions/cache@v4
