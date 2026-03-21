@@ -1,79 +1,49 @@
 name: Notice Scraper (Green API)
-# green-api branch workflow
+
 on:
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
   push:
-    branches: [green-api]    # ← only runs on this branch
+    branches: [green-api]
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Debug - Check session        # ← moved here, right after checkout
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          echo "=== All files in root ==="
-          ls -la
-          echo "=== .wwebjs_auth contents ==="
-          ls -la .wwebjs_auth/ || echo "❌ .wwebjs_auth not found"
-          echo "=== .wwebjs_auth/session contents ==="
-          ls -la .wwebjs_auth/session/ || echo "❌ session subfolder not found"
-    
-      - name: Remove session lock files
-        run: |
-          rm -f .wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/LOCK
-          rm -f .wwebjs_auth/session/SingletonLock
-          rm -f .wwebjs_auth/session/SingletonCookie
-          rm -f .wwebjs_auth/session/SingletonSocket
-          echo "✅ Lock files removed"
+        with:
+          ref: green-api
 
       - name: Restore SQLite database
         uses: actions/cache@v4
         with:
           path: database.db
-          key: notices-db-${{ github.run_number }}
-          restore-keys: notices-db-
+          key: notices-db-greenapi-${{ github.run_number }}
+          restore-keys: notices-db-greenapi-
 
       - name: Restore downloads
         uses: actions/cache@v4
         with:
           path: downloads/
-          key: downloads-${{ github.run_number }}
-          restore-keys: downloads-
+          key: downloads-greenapi-${{ github.run_number }}
+          restore-keys: downloads-greenapi-
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Python deps
+      - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Install system deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq poppler-utils chromium-browser \
-            libgbm-dev libasound2t64 libatk1.0-0 libcups2 libnspr4 libnss3 \
-            libxss1 libxtst6 libglib2.0-0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Node deps
-        run: npm install
 
       - name: Run bot
         env:
           SITE_USERNAME: ${{ secrets.SITE_USERNAME }}
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
-          WHATSAPP_CHANNEL_ID: ${{ secrets.WHATSAPP_CHANNEL_ID }}
+          GREEN_API_INSTANCE: ${{ secrets.GREEN_API_INSTANCE }}
+          GREEN_API_TOKEN: ${{ secrets.GREEN_API_TOKEN }}
+          WHATSAPP_GROUP_ID: ${{ secrets.WHATSAPP_GROUP_ID }}
         run: python main.py
