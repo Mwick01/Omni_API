@@ -10,8 +10,8 @@ from database import init_db, insert_notice
 
 load_dotenv()
 
-LOGIN_URL    = "https://paravi.ruh.ac.lk/fosmis2019/login.php"
-NOTICE_URL   = "https://paravi.ruh.ac.lk/fosmis2019/forms/form_53_a.php"
+LOGIN_URL    = os.getenv("LOGIN_URL")
+NOTICE_URL   = os.getenv("NOTICE_URL")
 DOWNLOAD_DIR = "downloads"
 
 USERNAME = os.getenv("SITE_USERNAME")
