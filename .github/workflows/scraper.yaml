@@ -1,8 +1,10 @@
 name: Notice Scraper
+# whatsapp-webjs branch workflow  
 on:
-  schedule:
-    - cron: '*/15 * * * *'
+
   workflow_dispatch:
+  push:
+    branches: [whatsapp-webjs]    # ← only runs on this branch
 
 jobs:
   scrape:
