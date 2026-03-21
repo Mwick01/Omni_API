@@ -22,6 +22,14 @@ jobs:
           ls -la .wwebjs_auth/ || echo "❌ .wwebjs_auth not found"
           echo "=== .wwebjs_auth/session contents ==="
           ls -la .wwebjs_auth/session/ || echo "❌ session subfolder not found"
+    
+      - name: Remove session lock files
+        run: |
+          rm -f .wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/LOCK
+          rm -f .wwebjs_auth/session/SingletonLock
+          rm -f .wwebjs_auth/session/SingletonCookie
+          rm -f .wwebjs_auth/session/SingletonSocket
+          echo "✅ Lock files removed"
 
       - name: Restore SQLite database
         uses: actions/cache@v4
