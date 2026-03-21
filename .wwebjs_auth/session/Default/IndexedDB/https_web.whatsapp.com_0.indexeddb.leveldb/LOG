@@ -1,0 +1,5 @@
+2026/03/21-11:37:04.618 1667 Creating DB /home/runner/work/Omni_API/Omni_API/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/03/21-11:37:04.622 1667 Reusing MANIFEST /home/runner/work/Omni_API/Omni_API/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/21-11:37:24.480 1672 Level-0 table #5: started
+2026/03/21-11:37:24.560 1672 Level-0 table #5: 997896 bytes OK
+2026/03/21-11:37:24.564 1672 Delete type=0 #3
