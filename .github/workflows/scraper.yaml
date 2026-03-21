@@ -1,8 +1,11 @@
-name: Notice Scraper
+name: Notice Scraper (Green API)
+# green-api branch workflow
 on:
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
+  push:
+    branches: [green-api]    # ← only runs on this branch
 
 jobs:
   scrape:
