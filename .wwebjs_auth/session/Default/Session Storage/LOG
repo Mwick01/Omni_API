@@ -1,2 +1,3 @@
-2026/03/15-14:52:43.130 19b0 Creating DB C:\Users\user\Documents\GitHub\Omni_API\.wwebjs_auth\session\Default\Session Storage since it was missing.
-2026/03/15-14:52:43.148 19b0 Reusing MANIFEST C:\Users\user\Documents\GitHub\Omni_API\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
+2026/03/21-09:49:54.466 1693 Reusing MANIFEST /home/runner/work/Omni_API/Omni_API/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001
+2026/03/21-09:49:54.468 1693 Recovering log #3
+2026/03/21-09:49:54.469 1693 Reusing old log /home/runner/work/Omni_API/Omni_API/.wwebjs_auth/session/Default/Session Storage/000003.log 
