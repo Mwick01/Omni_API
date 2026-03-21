@@ -1,7 +1,6 @@
 name: Notice Scraper (Green API)
 
 on:
-
     schedule:
     - cron: '*/15 * * * *'
     workflow_dispatch:
