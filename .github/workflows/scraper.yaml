@@ -2,9 +2,9 @@ name: Notice Scraper (Green API)
 
 on:
 
-  workflow_dispatch:
-  push:
-    branches: [green-api]
+    schedule:
+    - cron: '*/15 * * * *'
+    workflow_dispatch:
 
 jobs:
   scrape:
