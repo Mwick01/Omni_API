@@ -109,7 +109,9 @@ def scrape_and_download():
 
             # HTML → TXT conversion
             if "text/html" in file_resp.headers.get("Content-Type", ""):
-                page_soup = BeautifulSoup(file_resp.content, "html.parser")
+                # Force UTF-8 decoding to handle Sinhala and other Unicode
+                file_resp.encoding = "utf-8"
+                page_soup = BeautifulSoup(file_resp.text, "html.parser")
                 notice_div = page_soup.find("div", id="m") or page_soup
                 for tag in notice_div(["script", "style"]):
                     tag.decompose()
