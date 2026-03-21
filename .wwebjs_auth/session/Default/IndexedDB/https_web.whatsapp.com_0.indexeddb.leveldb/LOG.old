@@ -1,0 +1,5 @@
+2026/03/15-14:52:46.490 3e84 Creating DB C:\Users\user\Documents\GitHub\Omni_API\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/03/15-14:52:46.507 3e84 Reusing MANIFEST C:\Users\user\Documents\GitHub\Omni_API\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/15-14:53:06.671 379c Level-0 table #5: started
+2026/03/15-14:53:06.714 379c Level-0 table #5: 1004181 bytes OK
+2026/03/15-14:53:06.715 379c Delete type=0 #3
