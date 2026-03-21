@@ -70,7 +70,7 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 
 | Secret Name | Value |
 |---|---|
-| `SITE_USERNAME` | `sc12069` |
+| `SITE_USERNAME` | `XXXXXXXXXXX` |
 | `SITE_PASSWORD` | Your portal password |
 | `WHATSAPP_CHANNEL_ID` | e.g. `120363XXXXXXXXXX@newsletter` |
 
