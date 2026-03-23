@@ -1,7 +1,5 @@
 # ========================
 # Environment variables
 # ========================
-.env
-.env.*
-.venv/
+s
 node_modules
